@@ -1,5 +1,5 @@
 library(Matrix)
-
+#lu for net rating
 #Read in data
 data2 <- read.csv(file = 'data/all_seasons.csv')
 players_data <- data2[data2$draft_round != "Undrafted", ]
