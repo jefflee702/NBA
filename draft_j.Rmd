@@ -1,0 +1,113 @@
+---
+title: "STA 141C Final"
+output: html_document
+---
+
+Jeff
+
+```{r}
+library(Matrix)
+```
+
+```{r}
+dataStats <- read.csv("./data/all_seasons.csv")
+dataStats <- dataStats[-1]
+dataStats <- dataStats[-2]
+dataStats <- dataStats[, -c(5:6)]
+dataStats <- dataStats[-18]
+
+# filter out undrafted players
+nba_data <- dataStats[dataStats$draft_number != "Undrafted",]
+
+# convert draft number and player height to numeric variables
+nba_data$draft_number <- as.numeric(nba_data$draft_number)
+nba_data$player_weight <- as.numeric(nba_data$player_weight)
+nba_data$age <- as.numeric(nba_data$age)
+
+Xy <- cbind(1, as.matrix(nba_data[, c(9:11, 7)])) #X and y
+colnames(Xy)[1] <- "intercept"
+```
+
+```{r}
+#LU
+X <- cbind(1, as.matrix(nba_data[, 9:11]))
+y <- nba_data[, 7]
+XX <- crossprod(X)
+XX.lu <- expand(lu(XX))
+L <- XX.lu$L
+U <- XX.lu$U
+P <- XX.lu$P
+bs <- forwardsolve(L, crossprod(P, crossprod(X, y)))
+betahat <- backsolve(U, bs)
+
+#LU Function
+lufunc <- function(data){
+  X <- cbind(1, as.matrix(data[, 9:11]))
+  y <- data[, 7]
+  XX <- crossprod(X)
+  XX.lu <- expand(lu(XX))
+  L <- XX.lu$L
+  U <- XX.lu$U
+  P <- XX.lu$P
+  bs <- forwardsolve(L, crossprod(P, crossprod(X, y)))
+  betahat <- backsolve(U, bs)
+}
+
+#LU Time
+ptm <- system.time({
+  results <- replicate(100, lufunc(nba_data))
+})
+
+print(betahat)
+print(ptm)
+```
+
+```{r}
+#Cholesky
+
+#form the Grammian matrix
+yXXy <- crossprod(Xy)
+#Cholesky decomposition of Grammian matrix
+cholR <- chol(yXXy)
+#regression coefficients
+betahat <- backsolve(cholR[1:4, 1:4], cholR[1:4, 5])
+
+#Cholesky Function
+cholfunc <- function(){
+  yXXy <- crossprod(Xy)
+  cholR <- chol(yXXy)
+  betahat <- backsolve(cholR[1:4, 1:4], cholR[1:4, 5])
+}
+
+#Cholesky Time
+ptm <- system.time({
+  results <- replicate(100, cholfunc())
+})
+
+print(betahat)
+print(ptm)
+```
+
+```{r}
+#QR
+x.qr <- qr(Xy[, 1:4])
+betahat <- forwardsolve(x.qr$qr, yXXy[order(x.qr$pivot), 5],
+upper.tri = TRUE, transpose = TRUE)
+betahat <- backsolve(x.qr$qr, betahat)[x.qr$pivot]
+
+#QR Function
+qrfunc <- function(){
+  x.qr <- qr(Xy[, 1:4])
+  betahat <- forwardsolve(x.qr$qr, yXXy[order(x.qr$pivot), 5],
+  upper.tri = TRUE, transpose = TRUE)
+  betahat <- backsolve(x.qr$qr, betahat)[x.qr$pivot]
+}
+
+#QR Time
+ptm <- system.time({
+  results <- replicate(100, qrfunc())
+})
+
+print(betahat)
+print(ptm)
+```
