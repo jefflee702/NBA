@@ -1,0 +1,120 @@
+---
+title: "STA 141C Final"
+output: html_document
+---
+
+```{r}
+library(Matrix)
+```
+
+```{r}
+players_data <- read.csv("./data/all_seasons.csv")
+# Remove undrafted
+players_data <- players_data[!(players_data$draft_year == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_round == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_number == "Undrafted"),]
+
+# Make numeric
+players_data$draft_year <- as.numeric(players_data$draft_year)
+players_data$draft_round <- as.numeric(players_data$draft_round)
+players_data$draft_number <- as.numeric(players_data$draft_number)
+
+# Drop wrong data
+players_data <- players_data[players_data$draft_year >= 1990,]
+players_data <- players_data[players_data$draft_round <= 2,]
+players_data <- players_data[players_data$draft_number <= 60,]
+players_data <- players_data[players_data$draft_number >= 1,]
+
+#Set data for draft number
+nba_data <- players_data[, c(11, 13:15)]
+#X = nba_data[,2:4]
+#y = nba_data[,1]
+
+Xy <- cbind(1, as.matrix(nba_data[, c(2:4,1)])) #X and y
+colnames(Xy)[1] <- "intercept"
+```
+
+
+```{r}
+#LU
+X <- cbind(1, as.matrix(nba_data[, 2:4]))
+y <- nba_data[,1]
+XX <- crossprod(X)
+XX.lu <- expand(lu(XX))
+L <- XX.lu$L
+U <- XX.lu$U
+P <- XX.lu$P
+bs <- forwardsolve(L, crossprod(P, crossprod(X, y)))
+betahat <- backsolve(U, bs)
+
+#LU Function
+lufunc <- function(data){
+  X <- cbind(1, as.matrix(data[, 2:4]))
+  y <- data[,1]
+  XX <- crossprod(X)
+  XX.lu <- expand(lu(XX))
+  L <- XX.lu$L
+  U <- XX.lu$U
+  P <- XX.lu$P
+  bs <- forwardsolve(L, crossprod(P, crossprod(X, y)))
+  betahat <- backsolve(U, bs)
+}
+
+#LU Time
+ptm <- system.time({
+  results <- replicate(100, lufunc(nba_data))
+})
+
+print(betahat)
+print(ptm)
+```
+
+```{r}
+#Cholesky
+
+#form the Grammian matrix
+yXXy <- crossprod(Xy)
+#Cholesky decomposition of Grammian matrix
+cholR <- chol(yXXy)
+#regression coefficients
+betahat <- backsolve(cholR[1:4, 1:4], cholR[1:4, 5])
+
+#Cholesky Function
+cholfunc <- function(){
+  yXXy <- crossprod(Xy)
+  cholR <- chol(yXXy)
+  betahat <- backsolve(cholR[1:4, 1:4], cholR[1:4, 5])
+}
+
+#Cholesky Time
+ptm <- system.time({
+  results <- replicate(100, cholfunc())
+})
+
+print(betahat)
+print(ptm)
+```
+
+```{r}
+#QR
+x.qr <- qr(Xy[, 1:4])
+betahat <- forwardsolve(x.qr$qr, yXXy[order(x.qr$pivot), 5],
+upper.tri = TRUE, transpose = TRUE)
+betahat <- backsolve(x.qr$qr, betahat)[x.qr$pivot]
+
+#QR Function
+qrfunc <- function(){
+  x.qr <- qr(Xy[, 1:4])
+  betahat <- forwardsolve(x.qr$qr, yXXy[order(x.qr$pivot), 5],
+  upper.tri = TRUE, transpose = TRUE)
+  betahat <- backsolve(x.qr$qr, betahat)[x.qr$pivot]
+}
+
+#QR Time
+ptm <- system.time({
+  results <- replicate(100, qrfunc())
+})
+
+print(betahat)
+print(ptm)
+```
