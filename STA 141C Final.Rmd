@@ -14,7 +14,34 @@ dataStats <- dataStats[-18]
 
 # filter out undrafted players
 nba_data <- dataStats[dataStats$draft_number != "Undrafted",]
+```
 
+```{r}
+players_data <- read.csv("all_seasons.csv")
+# Remove undrafted
+players_data <- players_data[!(players_data$draft_year == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_round == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_number == "Undrafted"),]
+
+# Make numeric
+players_data$draft_year <- as.numeric(players_data$draft_year)
+players_data$draft_round <- as.numeric(players_data$draft_round)
+players_data$draft_number <- as.numeric(players_data$draft_number)
+
+# Drop wrong data
+players_data <- players_data[players_data$draft_year >= 1990,]
+players_data <- players_data[players_data$draft_round <= 2,]
+players_data <- players_data[players_data$draft_number <= 60,]
+players_data <- players_data[players_data$draft_number >= 1,]
+
+#Set data for draft number
+nba_data <- players_data[, c(4, 5, 6, 11, 12, 13:21)]
+#X = nba_data[,2:4]
+#y = nba_data[,1]
+```
+
+
+```{r}
 # convert draft number and player height to numeric variables
 nba_data$draft_number <- as.numeric(nba_data$draft_number)
 nba_data$player_weight <- as.numeric(nba_data$player_weight)
