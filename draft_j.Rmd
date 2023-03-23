@@ -3,35 +3,42 @@ title: "STA 141C Final"
 output: html_document
 ---
 
-Jeff
-
 ```{r}
 library(Matrix)
 ```
 
 ```{r}
-dataStats <- read.csv("./data/all_seasons.csv")
-dataStats <- dataStats[-1]
-dataStats <- dataStats[-2]
-dataStats <- dataStats[, -c(5:6)]
-dataStats <- dataStats[-18]
+players_data <- read.csv("./data/all_seasons.csv")
+# Remove undrafted
+players_data <- players_data[!(players_data$draft_year == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_round == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_number == "Undrafted"),]
 
-# filter out undrafted players
-nba_data <- dataStats[dataStats$draft_number != "Undrafted",]
+# Make numeric
+players_data$draft_year <- as.numeric(players_data$draft_year)
+players_data$draft_round <- as.numeric(players_data$draft_round)
+players_data$draft_number <- as.numeric(players_data$draft_number)
 
-# convert draft number and player height to numeric variables
-nba_data$draft_number <- as.numeric(nba_data$draft_number)
-nba_data$player_weight <- as.numeric(nba_data$player_weight)
-nba_data$age <- as.numeric(nba_data$age)
+# Drop wrong data
+players_data <- players_data[players_data$draft_year >= 1990,]
+players_data <- players_data[players_data$draft_round <= 2,]
+players_data <- players_data[players_data$draft_number <= 60,]
+players_data <- players_data[players_data$draft_number >= 1,]
 
-Xy <- cbind(1, as.matrix(nba_data[, c(9:11, 7)])) #X and y
+#Set data for draft number
+nba_data <- players_data[, c(11, 13:15)]
+#X = nba_data[,2:4]
+#y = nba_data[,1]
+
+Xy <- cbind(1, as.matrix(nba_data[, c(2:4,1)])) #X and y
 colnames(Xy)[1] <- "intercept"
 ```
 
+
 ```{r}
 #LU
-X <- cbind(1, as.matrix(nba_data[, 9:11]))
-y <- nba_data[, 7]
+X <- cbind(1, as.matrix(nba_data[, 2:4]))
+y <- nba_data[,1]
 XX <- crossprod(X)
 XX.lu <- expand(lu(XX))
 L <- XX.lu$L
@@ -42,8 +49,8 @@ betahat <- backsolve(U, bs)
 
 #LU Function
 lufunc <- function(data){
-  X <- cbind(1, as.matrix(data[, 9:11]))
-  y <- data[, 7]
+  X <- cbind(1, as.matrix(data[, 2:4]))
+  y <- data[,1]
   XX <- crossprod(X)
   XX.lu <- expand(lu(XX))
   L <- XX.lu$L
