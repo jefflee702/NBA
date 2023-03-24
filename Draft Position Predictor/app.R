@@ -46,7 +46,7 @@ ui <- fluidPage(
     
     # Enter player net rating
     sliderInput("net_rating", label = h3("Enter player net rating"), 
-                min = -20, max = 20, value = 0),
+                min = -20, max = 20, value = -20),
     
     # Enter player offensive rebound percentage
     sliderInput("oreb_pct", label = h3("Enter player offensive rebound percentage"), 
