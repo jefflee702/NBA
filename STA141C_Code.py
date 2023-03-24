@@ -1,22 +1,17 @@
-# Import required libraries
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.decomposition import PCA
 
-# Load the NBA dataset into a Pandas dataframe
 nba_df = pd.read_csv('all_seasons.csv')
 nba_df
 
-# Encode 'undrafted' values in draft_round and draft_pick columns as a separate category
 nba_df['draft_round'] = nba_df['draft_round'].apply(lambda x: 'undrafted' if x == 'undrafted' else 'drafted')
 nba_df['draft_number'] = nba_df['draft_number'].apply(lambda x: 'undrafted' if x == 'undrafted' else 'drafted')
 
-# Extract the features we want to use for PCA and standardize the data
 X = nba_df[['player_height', 'player_weight', 'draft_round', 'draft_number',
             'net_rating', 'oreb_pct', 'dreb_pct', 'usg_pct',
             'ts_pct', 'ast_pct', 'college', 'team_abbreviation', 'country', 'draft_year']]
 
-# Encode categorical variables using label encoding
 le = LabelEncoder()
 X['draft_round'] = le.fit_transform(X['draft_round'])
 X['draft_number'] = le.fit_transform(X['draft_number'])
@@ -25,7 +20,7 @@ X['team_abbreviation'] = le.fit_transform(X['team_abbreviation'].astype(str))
 X['country'] = le.fit_transform(X['country'].astype(str))
 X['draft_year'] = le.fit_transform(X['draft_year'].astype(str))
 
-# Standardize numerical variables
+
 numerical_cols = ['player_height', 'player_weight', 'net_rating', 'oreb_pct', 
                   'dreb_pct', 'usg_pct', 'ts_pct', 'ast_pct']
 X[numerical_cols] = StandardScaler().fit_transform(X[numerical_cols])
@@ -34,7 +29,7 @@ X[numerical_cols] = StandardScaler().fit_transform(X[numerical_cols])
 pca = PCA(n_components=10)
 principal_components = pca.fit_transform(X)
 
-# Look at the explained variance of each principal component
+# explained variance of each principal component
 explained_variance = pca.explained_variance_ratio_
 print("Explained variance: ", explained_variance)
 
