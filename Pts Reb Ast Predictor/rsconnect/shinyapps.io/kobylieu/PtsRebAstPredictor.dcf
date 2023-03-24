@@ -1,0 +1,13 @@
+name: PtsRebAstPredictor
+title: PtsRebAstPredictor
+username:
+account: kobylieu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8660365
+bundleId: 7000781
+url: https://kobylieu.shinyapps.io/PtsRebAstPredictor/
+when: 1679626874.44122
+lastSyncTime: 1679626874.44123
+asMultiple: FALSE
+asStatic: FALSE

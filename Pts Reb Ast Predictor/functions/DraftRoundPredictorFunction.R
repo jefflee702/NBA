@@ -1,0 +1,116 @@
+
+dataStats <- read.csv("data/all_seasons.csv")
+dataStats <- dataStats[-1]
+dataStats <- dataStats[-2]
+dataStats <- dataStats[, -c(5:6)]
+dataStats <- dataStats[-18]
+
+# filter out undrafted players
+nba_data <- dataStats[dataStats$draft_number != "Undrafted",]
+
+players_data <- read.csv("data/all_seasons.csv")
+# Remove undrafted
+players_data <- players_data[!(players_data$draft_year == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_round == "Undrafted"),]
+players_data <- players_data[!(players_data$draft_number == "Undrafted"),]
+
+# Make numeric
+players_data$draft_year <- as.numeric(players_data$draft_year)
+players_data$draft_round <- as.numeric(players_data$draft_round)
+players_data$draft_number <- as.numeric(players_data$draft_number)
+
+# Drop wrong data
+players_data <- players_data[players_data$draft_year >= 1990,]
+players_data <- players_data[players_data$draft_round <= 2,]
+players_data <- players_data[players_data$draft_number <= 60,]
+players_data <- players_data[players_data$draft_number >= 1,]
+
+#Set data for draft number
+nba_data <- players_data[, c(4, 5, 6, 11, 12, 13:21)]
+#X = nba_data[,2:4]
+#y = nba_data[,1]
+
+# convert draft number and player height to numeric variables
+nba_data$draft_number <- as.numeric(nba_data$draft_number)
+nba_data$player_weight <- as.numeric(nba_data$player_weight)
+nba_data$age <- as.numeric(nba_data$age)
+
+# fit a linear regression model for points
+lmPoints <- lm(pts ~ draft_number + player_height + age + player_weight + gp + net_rating + oreb_pct + dreb_pct + usg_pct + ts_pct + ast_pct, data = nba_data)
+
+# predict points for draft picks 1-60
+draft_picks <- data.frame(draft_number = 1:60, player_height = mean(nba_data$player_height), age = mean(nba_data$age), player_weight = mean(nba_data$player_weight), gp = mean(nba_data$gp), net_rating = mean(nba_data$net_rating), oreb_pct = mean(nba_data$oreb_pct), dreb_pct = mean(nba_data$dreb_pct), usg_pct = mean(nba_data$usg_pct), ts_pct = mean(nba_data$ts_pct), ast_pct = mean(nba_data$ast_pct))
+pred_pts <- predict(lmPoints, newdata = draft_picks)
+
+# fit a linear regression model for rebounds
+lmRebounds <- lm(reb ~ draft_number + player_height + age + player_weight + gp + net_rating + oreb_pct + dreb_pct + usg_pct + ts_pct + ast_pct, data = nba_data)
+
+# predict rebounds for draft picks 1-60
+pred_reb <- predict(lmRebounds, newdata = draft_picks)
+
+# fit a linear regression model for assists
+lmAssists <- lm(ast ~ draft_number + player_height + age + player_weight + gp + net_rating + oreb_pct + dreb_pct + usg_pct + ts_pct + ast_pct, data = nba_data)
+
+# predict assists for draft picks 1-60
+pred_ast <- predict(lmAssists, newdata = draft_picks)
+
+
+print(pred_pts)
+print(pred_ast)
+print(pred_reb)
+
+# create a data frame with predicted values
+pred_df <- data.frame(Draft_Pick = 1:60, Points = pred_pts, Assists = pred_ast, Rebounds = pred_reb)
+
+# plot predicted values for each category by draft pick
+library(ggplot2)
+ggplot(pred_df, aes(x = Draft_Pick)) +
+  geom_point(aes(y = Points, color = "Points")) +
+  geom_point(aes(y = Assists, color = "Assists")) +
+  geom_point(aes(y = Rebounds, color = "Rebounds")) +
+  scale_color_manual(values = c("red", "green", "blue")) +
+  xlab("Draft Position") + ylab("Predicted Statistics") + 
+  ggtitle("Predicted NBA Statistics based on Draft Position") +
+  labs(color = "Category")
+
+
+# create a matrix of the predicted values
+predMat <- cbind(pred_pts, pred_reb, pred_ast)
+
+# normalize the matrix for each column
+predMat2 <- apply(predMat, 2, function(x) (x - min(x)) / (max(x) - min(x)))
+
+# create a heatmap using the normalized matrix
+heatmap(predMat2, Rowv = NA, Colv = NA, col = colorRampPalette(c("#FFFFFF", "#FFFF00", "#FFA500", "#FF0000"))(100), margins = c(5, 10), xlab = "Predictions", ylab = "Draft Pick", main = "Predicted NBA Statistics based on Draft Position")
+
+# fit a linear regression model that predicts draft number based on 
+# average points, average assists, and average rebounds
+lmDraftNumber <- lm(draft_number ~ ast + pts + reb, data = nba_data)
+
+# predict a player's draft number based on ast, pts, reb
+draftnum <- function(df){
+  output = predict(lmDraftNumber, newdata = df)
+  return(output)
+  }
+
+# predict a player's points based on draft number
+player_pred_pts <- function(draftnum = 1){
+  output = round(pred_pts[draftnum], 1)
+  return(output)
+}
+
+# predict a player's assists based on draft number
+player_pred_ast <- function(draftnum = 1){
+  output = round(pred_ast[draftnum], 1)
+  return(output)
+}
+
+# predict a player's rebounds based on draft number
+player_pred_reb <- function(draftnum = 1){
+  output = round(pred_reb[draftnum], 1)
+  return(output)
+}
+
+
+
+

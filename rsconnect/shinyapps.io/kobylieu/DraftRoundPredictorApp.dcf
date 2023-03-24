@@ -1,0 +1,13 @@
+name: DraftRoundPredictorApp
+title: DraftRoundPredictorApp
+username:
+account: kobylieu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8660131
+bundleId: 7000702
+url: https://kobylieu.shinyapps.io/DraftRoundPredictorApp/
+when: 1679624523.55985
+lastSyncTime: 1679624523.55987
+asMultiple: FALSE
+asStatic: FALSE

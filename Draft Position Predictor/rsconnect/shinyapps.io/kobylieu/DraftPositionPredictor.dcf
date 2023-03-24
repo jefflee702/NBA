@@ -1,0 +1,13 @@
+name: DraftPositionPredictor
+title: DraftPositionPredictor
+username:
+account: kobylieu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8660301
+bundleId: 7000969
+url: https://kobylieu.shinyapps.io/DraftPositionPredictor/
+when: 1679629665.79457
+lastSyncTime: 1679629665.79458
+asMultiple: FALSE
+asStatic: FALSE
